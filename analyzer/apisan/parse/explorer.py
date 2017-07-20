@@ -3,6 +3,7 @@ import copy
 import multiprocessing as mp
 import os
 import xml.etree.ElementTree as ET
+import re
 
 from ..lib import dbg
 from ..lib import utils
@@ -65,6 +66,23 @@ def is_call(node):
     return (node.event is not None
             and isinstance(node.event, CallEvent)
             and node.event.call is not None)
+
+def is_lock(node):
+    if is_call(node):
+        lock = re.compile(r"pthread_mutex_lock.*")
+        r = re.match(lock,node.event.call.name.id)
+        return r is not None
+    else:
+        return False
+
+def is_unlock(node):
+    if is_call(node):
+        lock = re.compile(r"pthread_mutex_unlock.*")
+        r = re.match(lock,node.event.call.name.id)
+        return r is not None
+    else:
+        return False
+
 
 class ExecNode(object):
     def __init__(self, node, children):

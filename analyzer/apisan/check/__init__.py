@@ -6,6 +6,7 @@ from apisan.check.echo import EchoChecker
 from apisan.check.fsb import FSBChecker
 from apisan.check.intovfl import IntOvflChecker
 from apisan.check.retval import RetValChecker
+from apisan.check.thread import ThreadSafetyChecker
 
 CHECKERS = {
     "rvchk": RetValChecker,
@@ -13,5 +14,6 @@ CHECKERS = {
     "cond": CondChecker,
     "fsb": FSBChecker,
     "args": ArgChecker,
-    "intovfl": IntOvflChecker
+    "intovfl": IntOvflChecker,
+    "thread": ThreadSafetyChecker
 }

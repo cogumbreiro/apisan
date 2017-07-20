@@ -11,7 +11,7 @@ class BugReport():
         self.code = code
 
     def __repr__(self):
-        return "BugReport(score=%.02f, code=%s, key=%s, ctx=%s" % (
+        return "BugReport(score=%.02f, code=%s, key=%s, ctx=%s)" % (
             self.score, self.code, self.key, self.ctx
         )
 

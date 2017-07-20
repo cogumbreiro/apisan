@@ -70,6 +70,10 @@ def add_build_command(subparsers):
     parser = subparsers.add_parser("build", help="make a symbolic context database")
     parser.add_argument("cmds", nargs="+")
 
+def add_compile_command(subparsers):
+    parser = subparsers.add_parser("compile", help="make a symbolic context database")
+    parser.add_argument("cmds", nargs="+")
+    
 def add_check_command(subparsers):
     parser = subparsers.add_parser("check", help="check a API misuse")
     parser.add_argument("--checker", choices=CHECKERS.keys(), required=True)
@@ -80,11 +84,18 @@ def parse_args():
     subparsers = parser.add_subparsers(dest="cmd")
     subparsers.required = True
     add_build_command(subparsers)
+    add_compile_command(subparsers)
     add_check_command(subparsers)
     return parser.parse_args()
 
 def handle_build(args):
     cmds = get_command()
+    cmds += args.cmds
+    os.spawnv(os.P_WAIT, cmds[0], cmds)
+
+def handle_compile(args):
+    cmds = get_command()
+    cmds += ["gcc", "-c"]
     cmds += args.cmds
     os.spawnv(os.P_WAIT, cmds[0], cmds)
 

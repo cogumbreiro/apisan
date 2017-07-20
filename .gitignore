@@ -21,7 +21,9 @@ test-as/Makefile
 *.status
 *.spec
 *.bak
-
+*.swp
+*.swo 
+__pycache__
 
 llvm/include/llvm/Config/config.h
 llvm/include/llvm/Config/llvm-config.h
