@@ -14,7 +14,7 @@ class ThreadSafetyContext(Context):
             scores = {}
             for ctx, codes in value.items():
                 score = len(codes) / len(total)
-                if score >= config.THRESHOLD and score != 1:
+                if score >= config.THRESHOLD and ctx and score != 1:
                     diff = diff - codes
                     for bug in diff:
                         scores[bug] = score
