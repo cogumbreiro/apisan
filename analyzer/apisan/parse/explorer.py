@@ -207,7 +207,8 @@ class Explorer(object):
         return self.checker.merge(result)
 
     def explore_single_file(self, filename):
-        return self.checker.merge(self._explore_file(filename))
+        # This is only useful to cache the analysis
+        return self._explore_file(filename)
 
     def _parse_file(self, fn):
         # Try to load a memoized result
