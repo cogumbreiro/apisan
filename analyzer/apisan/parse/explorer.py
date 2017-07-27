@@ -208,7 +208,8 @@ class Explorer(object):
 
     def explore_single_file(self, filename):
         # This is only useful to cache the analysis
-        return self._explore_file(filename)
+        self._explore_file(filename)
+        return []
 
     def _parse_file(self, fn):
         # Try to load a memoized result
