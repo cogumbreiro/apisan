@@ -4,6 +4,7 @@ import multiprocessing as mp
 import os
 import xml.etree.ElementTree as ET
 import re
+import pickle
 
 from ..lib import dbg
 from ..lib import utils
@@ -209,6 +210,13 @@ class Explorer(object):
         return self.checker.merge(self._explore_file(filename))
 
     def _parse_file(self, fn):
+        # Try to load a memoized result
+        try:
+            with open(fn + "." + self.checker.name, 'rb') as f:
+                return pickle.load(f)
+        except:
+            pass
+        # Run the regular algorithm
         forest = []
         with open(fn, 'r') as f:
             start = False
@@ -238,4 +246,10 @@ class Explorer(object):
                             forest.append(tree)
                     else:
                         body += line
+        # Try to cache the result
+        try:
+            with open(fn + "." + self.checker.name, 'wb') as f:
+                pickle.dump(forest, f)
+        except:
+            pass
         return forest
