@@ -31,8 +31,10 @@ def get_all_files(in_d):
     return files
 
 class ConstraintMgr(object):
-    def __init__(self):
-        self.constraints = dict()
+    def __init__(self, constraints=None):
+        if constraints is None:
+            constraints = dict()
+        self.constraints = constraints
 
     def feed(self, node):
         # return newly allocated ConstraintMgr if changed
@@ -43,7 +45,7 @@ class ConstraintMgr(object):
             if cond and cond.kind == SymbolKind.Constraint:
                 # XXX : latest gives false positives
                 if not cond.symbol in self.constraints:
-                    new = copy.deepcopy(self)
+                    new = ConstraintMgr(self.constraints.copy())
                     new.constraints[cond.symbol] = cond.constraints
                     return new
 
