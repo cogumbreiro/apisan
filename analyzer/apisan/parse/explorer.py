@@ -205,6 +205,9 @@ class Explorer(object):
             result += r
         return self.checker.merge(result)
 
+    def explore_single_file(self, filename):
+        return self.checker.merge(self._explore_file(filename))
+
     def _parse_file(self, fn):
         forest = []
         with open(fn, 'r') as f:

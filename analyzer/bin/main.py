@@ -78,6 +78,7 @@ def add_check_command(subparsers):
     parser = subparsers.add_parser("check", help="check a API misuse")
     parser.add_argument("--checker", choices=CHECKERS.keys(), required=True)
     parser.add_argument("--db", default=None)
+    parser.add_argument("--filename", default=None, help="Check a single file (.as); ignores the database.")
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -100,11 +101,14 @@ def handle_compile(args):
     os.spawnv(os.P_WAIT, cmds[0], cmds)
 
 def handle_check(args):
-    if args.db is None:
-        args.db = os.path.join(os.getcwd(), "as-out")
     chk = CHECKERS[args.checker]()
     exp = Explorer(chk)
-    bugs = exp.explore_parallel(args.db)
+    if args.filename is not None:
+        bugs = exp.explore_single_file(args.filename)
+    else:
+        if args.db is None:
+            args.db = os.path.join(os.getcwd(), "as-out")
+        bugs = exp.explore_parallel(args.db)
     print_bugs(bugs)
 
 def main():
