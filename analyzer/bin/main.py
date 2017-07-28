@@ -102,6 +102,7 @@ def handle_compile(args):
 
 def handle_check(args):
     chk = CHECKERS[args.checker]()
+    chk.name = args.checker
     exp = Explorer(chk)
     if args.filename is not None:
         bugs = exp.explore_single_file(args.filename)
