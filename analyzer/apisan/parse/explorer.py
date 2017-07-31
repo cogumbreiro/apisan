@@ -68,21 +68,23 @@ def is_eop(node):
 def is_call(node):
     return (node.event is not None
             and isinstance(node.event, CallEvent)
-            and node.event.call is not None)
+            and node.event.call_text is not None)
 
+LOCK_RE = re.compile(r"pthread_mutex_lock.*")
 def is_lock(node):
     if is_call(node):
-        lock = re.compile(r"pthread_mutex_lock.*")
-        r = re.match(lock,node.event.call.name.id)
-        return r is not None
+        call_name = node.event.call_name
+        return call_name is not None and \
+            re.match(LOCK_RE, call_name) is not None
     else:
         return False
 
+UNLOCK_RE = re.compile(r"pthread_mutex_unlock.*")
 def is_unlock(node):
     if is_call(node):
-        lock = re.compile(r"pthread_mutex_unlock.*")
-        r = re.match(lock,node.event.call.name.id)
-        return r is not None
+        call_name = node.event.call_name
+        return call_name is not None and \
+            re.match(UNLOCK_RE, call_name) is not None
     else:
         return False
 

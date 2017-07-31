@@ -39,16 +39,16 @@ class ThreadSafetyChecker(Checker):
         for i, node in enumerate(path):
             if is_lock(node):
                 mutex = True
-                call = node.event.call
+                call_name = node.event.call_name
                 code = node.event.code
             elif is_unlock(node):
                 mutex = False
-                call = node.event.call
+                call_name = node.event.call_name
                 code = node.event.code
             elif is_call(node): # normal call
-                call = node.event.call
+                call_name = node.event.call_name
                 code = node.event.code
-                self.context.add(call.name, mutex, code)
+                self.context.add(call_name, mutex, code)
                 
 
     def _finalize_process(self):

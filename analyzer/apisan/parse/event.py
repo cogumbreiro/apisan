@@ -48,6 +48,13 @@ class Event(object):
     def __setattr__(self, name, value):
         raise TypeError("Event objects are immutable.")
 
+def _call_name(txt):
+    result = txt.split('(', 1)
+    if len(result) < 2:
+        return None
+    return result[0]
+
+
 class CallEvent(Event):
     def __init__(self, event):
         super().__init__()
@@ -57,11 +64,18 @@ class CallEvent(Event):
             if child.tag == "KIND":
                 assert child.text == self.kind.value
             elif child.tag == "CALL":
+                self.__dict__['call_text'] = child.text
                 self.__dict__['_call'] = LazyParse(self._parse_call, child.text)
+                self.__dict__['_call_name'] = LazyParse(_call_name, child.text)
+
             elif child.tag == "CODE":
                 self.__dict__['code'] = child.text
             else:
                 raise ValueError("Unknown tag for CallEvent")
+
+    @property
+    def call_name(self):
+        return self._call_name()
 
     @property
     def call(self):
@@ -81,6 +95,7 @@ class LocationEvent(Event):
             if child.tag == "KIND":
                 assert child.text == self.kind.value
             elif child.tag == "LOC":
+                self.__dict__['loc_text'] = child.text
                 self.__dict__['_loc'] = LazyParse(self.parse_symbol, child.text)
             elif child.tag == "TYPE":
                 self.__dict__['type'] = child.text
@@ -116,6 +131,7 @@ class AssumeEvent(Event):
             if child.tag == "KIND":
                 assert child.text == self.kind.value
             elif child.tag == "COND":
+                self.__dict__['cond_text'] = child.text
                 self.__dict__['_cond'] = LazyParse(self.parse_cond, child.text)
             else:
                 raise ValueError("Unknown tag for AssumeEvent")
