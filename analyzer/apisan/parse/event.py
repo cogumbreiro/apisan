@@ -15,7 +15,7 @@ class EventKind(Enum):
 class Event(object):
     def __init__(self):
         global gid
-        self.id = gid
+        self.__dict__['id'] = gid
         gid += 1
 
     def __hash__(self):
@@ -31,18 +31,21 @@ class Event(object):
             return
 
 
+    def __setattr__(self, name, value):
+        raise TypeError("Event objects are immutable.")
+
 class CallEvent(Event):
     def __init__(self, event):
         super().__init__()
-        self.kind = EventKind.Call
+        self.__dict__['kind'] = EventKind.Call
 
         for child in event:
             if child.tag == "KIND":
                 assert child.text == self.kind.value
             elif child.tag == "CALL":
-                self.call = self._parse_call(child.text)
+                self.__dict__['call'] = self._parse_call(child.text)
             elif child.tag == "CODE":
-                self.code = child.text
+                self.__dict__['code'] = child.text
             else:
                 raise ValueError("Unknown tag for CallEvent")
 
@@ -54,17 +57,17 @@ class CallEvent(Event):
 class LocationEvent(Event):
     def __init__(self, event):
         super().__init__()
-        self.kind = EventKind.Location
+        self.__dict__['kind'] = EventKind.Location
 
         for child in event:
             if child.tag == "KIND":
                 assert child.text == self.kind.value
             elif child.tag == "LOC":
-                self.loc = self._parse_symbol(child.text)
+                self.__dict__['loc'] = self._parse_symbol(child.text)
             elif child.tag == "TYPE":
-                self.type = child.text
+                self.__dict__['type'] = child.text
             elif child.tag == "CODE":
-                self.code = child.text
+                self.__dict__['code'] = child.text
             else:
                 raise ValueError("Unknown tag for LocationEvent")
 
@@ -74,7 +77,7 @@ class LocationEvent(Event):
 class EOPEvent(Event):
     def __init__(self, event):
         super().__init__()
-        self.kind = EventKind.EOP
+        self.__dict__['kind'] = EventKind.EOP
 
         for child in event:
             if child.tag == "KIND":
@@ -85,13 +88,13 @@ class EOPEvent(Event):
 class AssumeEvent(Event):
     def __init__(self, event):
         super().__init__()
-        self.kind = EventKind.Assume
+        self.__dict__['kind'] = EventKind.Assume
 
         for child in event:
             if child.tag == "KIND":
                 assert child.text == self.kind.value
             elif child.tag == "COND":
-                self.cond = self.parse_cond(child.text)
+                self.__dict__['cond'] = self.parse_cond(child.text)
             else:
                 raise ValueError("Unknown tag for AssumeEvent")
 
