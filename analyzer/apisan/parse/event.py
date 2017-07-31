@@ -12,6 +12,20 @@ class EventKind(Enum):
     EOP = "@LOG_EOP"
     Assume = "@LOG_ASSUME"
 
+class LazyParse:
+    def __init__(self, parse_fun, text):
+        self.text = text
+        self.parse_fun = parse_fun
+    
+    def __call__(self):
+        if hasattr(self, 'result'):
+            return self.result
+        self.result = self.parse_fun(self.text)
+        # no longer need text and parser
+        del self.text
+        del self.parse_fun
+        return self.result
+
 class Event(object):
     def __init__(self):
         global gid
@@ -43,11 +57,15 @@ class CallEvent(Event):
             if child.tag == "KIND":
                 assert child.text == self.kind.value
             elif child.tag == "CALL":
-                self.__dict__['call'] = self._parse_call(child.text)
+                self.__dict__['_call'] = LazyParse(self._parse_call, child.text)
             elif child.tag == "CODE":
                 self.__dict__['code'] = child.text
             else:
                 raise ValueError("Unknown tag for CallEvent")
+
+    @property
+    def call(self):
+        return self._call()
 
     def _parse_call(self, text):
         sym = self._parse_symbol(text)
@@ -63,13 +81,17 @@ class LocationEvent(Event):
             if child.tag == "KIND":
                 assert child.text == self.kind.value
             elif child.tag == "LOC":
-                self.__dict__['loc'] = self._parse_symbol(child.text)
+                self.__dict__['_loc'] = LazyParse(self.parse_symbol, child.text)
             elif child.tag == "TYPE":
                 self.__dict__['type'] = child.text
             elif child.tag == "CODE":
                 self.__dict__['code'] = child.text
             else:
                 raise ValueError("Unknown tag for LocationEvent")
+
+    @property
+    def loc(self):
+        return self._loc()
 
     def is_store(self):
         return self.type == "STORE"
@@ -94,9 +116,13 @@ class AssumeEvent(Event):
             if child.tag == "KIND":
                 assert child.text == self.kind.value
             elif child.tag == "COND":
-                self.__dict__['cond'] = self.parse_cond(child.text)
+                self.__dict__['_cond'] = LazyParse(self.parse_cond, child.text)
             else:
                 raise ValueError("Unknown tag for AssumeEvent")
+
+    @property
+    def cond(self):
+        return self._cond()
 
     def parse_cond(self, cond):
         # XXX: symbol can be UnknownSymbol when parsing failed
