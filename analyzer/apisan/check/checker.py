@@ -4,16 +4,39 @@ from ..lib import config
 from ..lib.store import Store
 
 class BugReport():
-    def __init__(self, score, code, key, ctx):
+    def __init__(self, score, code, key, ctx, references=None):
         self.key = key
         self.ctx = ctx
         self.score = score
         self.code = code
+        self.references = references
+
+    def get_references(self, size):
+        if len(self.references) == 1 or size == 1:
+            refs = "{" + self.references.pop() + "}"
+        else:
+            i = 0
+            refs = "{"
+            for x in self.references:
+                if i >= size:
+                    break
+                elif i == len(self.references) - 1 or i == size - 1:
+                    refs += x
+                else:
+                    refs = refs + x + ", "
+                i += 1
+            refs += "}"
+        return refs
 
     def __repr__(self):
-        return "BugReport(score=%.02f, code=%s, key=%s, ctx=%s)" % (
-            self.score, self.code, self.key, self.ctx
-        )
+        if self.references is None:
+            return "BugReport(score=%.02f, code=%s, key=%s, ctx=%s)" % (
+                self.score, self.code, self.key, self.ctx, self.references.pop()
+            )
+        else:
+            return "BugReport(score=%.02f, code=%s, key=%s, ctx=%s, reference=%s)" % (
+                self.score, self.code, self.key, self.ctx, self.get_references(5)
+            )
 
 class Context():
     def __init__(self):

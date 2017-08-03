@@ -25,7 +25,7 @@ class ThreadSafetyContext(Context):
                     if bug in added:
                         continue
                     added.add(bug)
-                    br = BugReport(scores[bug], bug, key, ctx)
+                    br = BugReport(scores[bug], bug, key, ctx, total - diff)
                     bugs.append(br)
         return bugs
 
@@ -49,7 +49,6 @@ class ThreadSafetyChecker(Checker):
                 call_name = node.event.call_name
                 code = node.event.code
                 self.context.add(call_name, mutex, code)
-                
 
     def _finalize_process(self):
         return self.context
