@@ -6,6 +6,8 @@ import xml.etree.ElementTree as ET
 import re
 import pickle
 
+from functools import wraps
+
 from ..lib import dbg
 from ..lib import utils
 from .event import EventKind, EOPEvent, CallEvent, LocationEvent, AssumeEvent
@@ -182,6 +184,31 @@ class ExecTree(object):
                 stack.append((xml_node, idx + 1, children))
                 stack.append((xml_node[idx + 1], 0, []))
 
+def cached(filename_gen):
+    def gen(func):
+        @wraps(func)
+        def try_cached(self, filename):
+            cached_fn = filename_gen(self, filename)
+            # Try to load a memoized result
+            try:
+                with open(cached_fn, 'rb') as f:
+                    result = pickle.load(f)
+                    dbg.info("Loaded cached result: %s" % cached_fn)
+                    return result
+            except:
+                pass
+            result = func(self, filename)
+            # Try to cache the result
+            try:
+                with open(cached_fn, 'wb') as f:
+                    pickle.dump(result, f)
+                dbg.info("Cached checker result: %s" % cached_fn)
+            except:
+                pass
+            return result
+        return try_cached
+    return gen
+
 class Explorer(object):
     def __init__(self, checker):
         self.checker = checker
@@ -192,6 +219,7 @@ class Explorer(object):
             result += self._explore_file(fn)
         return self.checker.merge(result)
 
+    @cached(lambda self, fn: fn + "." + self.checker.name)
     def _explore_file(self, fn):
         result = []
         for tree in self._parse_file(fn):
@@ -216,13 +244,6 @@ class Explorer(object):
         return []
 
     def _parse_file(self, fn):
-        # Try to load a memoized result
-        try:
-            with open(fn + "." + self.checker.name, 'rb') as f:
-                return pickle.load(f)
-        except:
-            pass
-        # Run the regular algorithm
         forest = []
         with open(fn, 'r') as f:
             start = False
@@ -252,10 +273,4 @@ class Explorer(object):
                             forest.append(tree)
                     else:
                         body += line
-        # Try to cache the result
-        try:
-            with open(fn + "." + self.checker.name, 'wb') as f:
-                pickle.dump(forest, f)
-        except:
-            pass
         return forest
