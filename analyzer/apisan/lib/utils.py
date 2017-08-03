@@ -56,10 +56,20 @@ def get_files(out_d):
                 yield pn
 
 def get_all_files(in_d):
-    files = []
-    for fn in get_files(in_d):
-        files.append(fn)
-    return files
+    if os.path.isdir(in_d):
+        files = []
+        for fn in get_files(in_d):
+            files.append(fn)
+        return files
+    else:
+        with open(in_d) as f:
+            result = []
+            for line in f.readlines():
+                line = line.strip()
+                if line.startswith("#"):
+                    continue
+                result.append(line)
+            return result
 
 def is_debug():
     return "DEBUG" in os.environ
