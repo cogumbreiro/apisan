@@ -140,9 +140,10 @@ class ExecTree(object):
     def __init__(self, xml):
         self.xml = xml
 
-    def parse(self):
+    def parse(self, parse_constraints):
         self.root = self._parse()
-        self._set_cmgr()
+        if parse_constraints:
+            self._set_cmgr()
 
     def _set_cmgr(self):
         stack = []
@@ -226,7 +227,8 @@ class Explorer(object):
     @cached(lambda self, fn: fn + "." + self.checker.name)
     def _explore_file(self, fn):
         result = []
-        for tree in self._parse_file(fn):
+        parse_constraints = getattr(self.checker, "parse_constraints", True)
+        for tree in self._parse_file(fn, parse_constraints):
             result.append(self.checker.process(tree))
         dbg.debug("Explored: %s" % fn)
         return result
@@ -247,7 +249,7 @@ class Explorer(object):
         self._explore_file(filename)
         return []
 
-    def _parse_file(self, fn):
+    def _parse_file(self, fn, parse_constraints):
         forest = []
         with open(fn, 'r') as f:
             start = False
@@ -273,7 +275,7 @@ class Explorer(object):
 
                         for root in xml:
                             tree = ExecTree(root)
-                            tree.parse()
+                            tree.parse(parse_constraints)
                             forest.append(tree)
                     else:
                         body += line

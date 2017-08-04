@@ -31,6 +31,8 @@ class ThreadSafetyContext(Context):
 
 
 class ThreadSafetyChecker(Checker):
+    parse_constraints = False
+
     def _initialize_process(self):
         self.context = ThreadSafetyContext()
 
