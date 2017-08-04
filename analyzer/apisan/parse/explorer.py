@@ -231,7 +231,7 @@ def cached(filename_gen):
 class Explorer(object):
     def __init__(self, checker):
         self.checker = checker
-        self.load_cache = True
+        self.read_cache = True
         self.write_cache = True
 
     def explore(self, in_d):

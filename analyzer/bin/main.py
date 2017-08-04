@@ -79,7 +79,7 @@ def add_check_command(subparsers):
     parser.add_argument("--checker", choices=CHECKERS.keys(), required=True)
     parser.add_argument("--db", default=None)
     parser.add_argument("--filename", default=None, help="Check a single file (.as); ignores the database.")
-    parser.add_argument("--skip-cache", action="store_true", default=True, help="Caches the results of the checker.")
+    parser.add_argument("--skip-cache", action="store_true", default=False, help="Caches the results of the checker.")
 
 def parse_args():
     parser = argparse.ArgumentParser()
