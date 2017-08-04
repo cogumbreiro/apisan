@@ -5,9 +5,10 @@ import os
 import xml.etree.ElementTree as ET
 import re
 import pickle
-from enum import Enum
 
+from enum import Enum
 from functools import wraps
+from collections import namedtuple
 
 from ..lib import dbg
 from ..lib import utils
@@ -152,54 +153,48 @@ class ExecNode(object):
             result += child.__str__(i + 1)
         return result
 
-class ExecTree(object):
-    def __init__(self, xml):
-        self.xml = xml
+ExecTree = namedtuple('ExecTree', ('root',))
 
-    def parse(self, parse_constraints):
-        self.root = self._parse()
-        if parse_constraints:
-            self._set_cmgr()
+def parse_exec_tree(xml):
+    stack = []
+    stack.append((xml, 0, []))
 
-    def _set_cmgr(self):
-        stack = []
-        stack.append((self.root, 0))
-        self.root.cmgr = ConstraintMgr()
-
-        while stack:
-            node, idx = stack.pop()
-            if idx == len(node.children):
-                # base case : all childrens are visited
-                continue
+    while True:
+        xml_node, idx, children = stack.pop()
+        # + 1 because of event
+        if len(xml_node) == idx + 1:
+            node = ExecNode(xml_node, children)
+            if not stack:
+                return ExecTree(node)
             else:
-                child = node.children[idx]
-                cmgr = node.cmgr.feed(node)
-                if cmgr:
-                    child.cmgr = cmgr
-                else:
-                    child.cmgr = node.cmgr
+                # children
+                stack[-1][2].append(node)
+        else:
+            # increase stack & create new stack frame
+            stack.append((xml_node, idx + 1, children))
+            stack.append((xml_node[idx + 1], 0, []))
 
-                stack.append((node, idx + 1))
-                stack.append((child, 0))
+def parse_constraint_mgr(root):
+    stack = []
+    stack.append((root, 0))
+    root.cmgr = ConstraintMgr()
 
-    def _parse(self):
-        stack = []
-        stack.append((self.xml, 0, []))
-
-        while True:
-            xml_node, idx, children = stack.pop()
-            # + 1 because of event
-            if len(xml_node) == idx + 1:
-                node = ExecNode(xml_node, children)
-                if not stack:
-                    return node
-                else:
-                    # children
-                    stack[-1][2].append(node)
+    while stack:
+        node, idx = stack.pop()
+        if idx == len(node.children):
+            # base case : all childrens are visited
+            continue
+        else:
+            child = node.children[idx]
+            cmgr = node.cmgr.feed(node)
+            if cmgr:
+                child.cmgr = cmgr
             else:
-                # increase stack & create new stack frame
-                stack.append((xml_node, idx + 1, children))
-                stack.append((xml_node[idx + 1], 0, []))
+                child.cmgr = node.cmgr
+
+            stack.append((node, idx + 1))
+            stack.append((child, 0))
+    
 
 def cached(filename_gen):
     def gen(func):
@@ -290,8 +285,9 @@ class Explorer(object):
                             return []
 
                         for root in xml:
-                            tree = ExecTree(root)
-                            tree.parse(parse_constraints)
+                            tree = parse_exec_tree(root)
+                            if parse_constraints:
+                                parse_constraint_mgr(root)
                             forest.append(tree)
                     else:
                         body += line
