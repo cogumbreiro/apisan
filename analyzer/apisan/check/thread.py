@@ -2,7 +2,7 @@
 import copy
 from .checker import Checker, Context, BugReport
 from ..lib import rank_utils, config
-from ..parse.explorer import is_call, is_lock, is_unlock
+from ..parse.explorer import is_call, is_lock, is_unlock, match_call, CallType
 from ..parse.symbol import IDSymbol
 
 class ThreadSafetyContext(Context):
@@ -38,19 +38,17 @@ class ThreadSafetyChecker(Checker):
 
     def _process_path(self, path):
         mutex = False
-        for i, node in enumerate(path):
-            if is_lock(node):
-                mutex = True
+        for node in path:
+            m = match_call(node)
+            if m is not None:
                 call_name = node.event.call_name
                 code = node.event.code
-            elif is_unlock(node):
-                mutex = False
-                call_name = node.event.call_name
-                code = node.event.code
-            elif is_call(node): # normal call
-                call_name = node.event.call_name
-                code = node.event.code
-                self.context.add(call_name, mutex, code)
+                if m == CallType.LOCK:
+                    mutex = True
+                elif m == CallType.UNLOCK:
+                    mutex = False
+                else: # normal call
+                    self.context.add(call_name, mutex, code)
 
     def _finalize_process(self):
         return self.context

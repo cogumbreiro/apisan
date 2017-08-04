@@ -5,6 +5,7 @@ import os
 import xml.etree.ElementTree as ET
 import re
 import pickle
+from enum import Enum
 
 from functools import wraps
 
@@ -66,6 +67,21 @@ class ConstraintMgr(object):
 def is_eop(node):
     return (node.event is not None
             and isinstance(node.event, EOPEvent))
+
+class CallType(Enum):
+    LOCK = 1
+    UNLOCK = 2
+    OTHER = 3
+
+def match_call(node):
+    if is_call(node):
+        call_name = node.event.call_name
+        if call_name == "pthread_mutex_lock":
+            return CallType.LOCK
+        elif call_name == "pthread_mutex_unlock":
+            return CallType.UNLOCK
+        return CallType.OTHER
+    return None
 
 def is_call(node):
     return (node.event is not None
