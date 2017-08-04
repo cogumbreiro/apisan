@@ -26,6 +26,8 @@ class LazyParse:
         del self.parse_fun
         return self.result
 
+parser = SParser()
+
 class Event(object):
     def __init__(self):
         global gid
@@ -37,7 +39,7 @@ class Event(object):
 
     def _parse_symbol(self, string):
         try:
-            parser = SParser()
+            #parser = SParser()
             sym = parser.parse(string)
             return sym
         except Exception as e:
