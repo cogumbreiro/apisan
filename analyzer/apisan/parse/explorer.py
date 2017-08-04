@@ -188,23 +188,25 @@ def cached(filename_gen):
     def gen(func):
         @wraps(func)
         def try_cached(self, filename):
-            cached_fn = filename_gen(self, filename)
-            # Try to load a memoized result
-            try:
-                with open(cached_fn, 'rb') as f:
-                    result = pickle.load(f)
-                    dbg.info("Loaded cached result: %s" % cached_fn)
-                    return result
-            except:
-                pass
+            if self.read_cache:
+                cached_fn = filename_gen(self, filename)
+                # Try to load a memoized result
+                try:
+                    with open(cached_fn, 'rb') as f:
+                        result = pickle.load(f)
+                        dbg.info("Loaded cached result: %s" % cached_fn)
+                        return result
+                except:
+                    pass
             result = func(self, filename)
-            # Try to cache the result
-            try:
-                with open(cached_fn, 'wb') as f:
-                    pickle.dump(result, f)
-                dbg.info("Cached checker result: %s" % cached_fn)
-            except:
-                pass
+            if self.write_cache:
+                # Try to cache the result
+                try:
+                    with open(cached_fn, 'wb') as f:
+                        pickle.dump(result, f)
+                    dbg.info("Cached checker result: %s" % cached_fn)
+                except:
+                    pass
             return result
         return try_cached
     return gen
@@ -212,6 +214,8 @@ def cached(filename_gen):
 class Explorer(object):
     def __init__(self, checker):
         self.checker = checker
+        self.load_cache = True
+        self.write_cache = True
 
     def explore(self, in_d):
         result = []
