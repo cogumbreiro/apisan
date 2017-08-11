@@ -39,7 +39,6 @@ class Event(object):
 
     def _parse_symbol(self, string):
         try:
-            #parser = SParser()
             sym = parser.parse(string)
             return sym
         except Exception as e:
