@@ -98,11 +98,10 @@ class Checker(object):
                 nodes.pop()
                 count += 1
             else:
-                if len(node.children) > index:
+                if len(node) > index:
                     indices.append(index + 1)
                     nodes.append(node)
 
-                    child = node.children[index]
-                    child.visited = False
+                    child = node[index]
                     indices.append(0)
                     nodes.append(child)

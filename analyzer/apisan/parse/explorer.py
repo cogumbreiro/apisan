@@ -5,7 +5,9 @@ import os
 import xml.etree.ElementTree as ET
 import re
 import pickle
+import weakref
 
+from io import StringIO
 from enum import Enum
 from functools import wraps
 from collections import namedtuple
@@ -66,8 +68,7 @@ class ConstraintMgr(object):
         return None
 
 def is_eop(node):
-    return (node.event is not None
-            and isinstance(node.event, EOPEvent))
+    return isinstance(node.event, EOPEvent)
 
 class CallType(Enum):
     LOCK = 1
@@ -107,23 +108,27 @@ def is_unlock(node):
     else:
         return False
 
-
 class ExecNode(object):
-    def __init__(self, node, children):
+    def __init__(self, node, parent=None):
         assert node.tag == "NODE"
-        self._set_children(children)
-        self.parent = None
-        self.visited = False
-        self.event = None
+        self.node = node
+        self._parent = weakref.ref(parent) if parent is not None else parent
+        self.event = self._parse_event(self.node.find("EVENT"))
 
-        for child in node:
-            if child.tag == "EVENT":
-                assert self.event is None
-                self.event = self._parse_event(child)
-            elif child.tag == "NODE":
-                continue
-            else:
-                raise ValueError("Unknown tag")
+    @property
+    def parent(self):
+        if self._parent is not None:
+            return self._parent()
+
+    def __iter__(self):
+        for x in self.node.findall("NODE"):
+            yield ExecNode(x, parent=self)
+
+    def __getitem__(self, key):
+        return ExecNode(self.node.findall("NODE")[key], parent=self)
+
+    def __len__(self):
+        return len(self.node.findall("NODE"))
 
     def _parse_event(self, node):
         kind = node[0]
@@ -140,39 +145,17 @@ class ExecNode(object):
         else:
             raise ValueError("Unknown kind")
 
-    def _set_children(self, children):
-        # set parent-child relation
-        self.children = children
-        for child in children:
-            child.parent = self
-
     # debugging function
     def __str__(self, i=0):
         result = (" " * i + repr(self) + "\n")
-        for child in self.children:
+        for child in self:
             result += child.__str__(i + 1)
         return result
 
 ExecTree = namedtuple('ExecTree', ('root',))
 
 def parse_exec_tree(xml):
-    stack = []
-    stack.append((xml, 0, []))
-
-    while True:
-        xml_node, idx, children = stack.pop()
-        # + 1 because of event
-        if len(xml_node) == idx + 1:
-            node = ExecNode(xml_node, children)
-            if not stack:
-                return ExecTree(node)
-            else:
-                # children
-                stack[-1][2].append(node)
-        else:
-            # increase stack & create new stack frame
-            stack.append((xml_node, idx + 1, children))
-            stack.append((xml_node[idx + 1], 0, []))
+    return ExecTree(ExecNode(xml))
 
 def parse_constraint_mgr(root):
     stack = []
@@ -181,11 +164,11 @@ def parse_constraint_mgr(root):
 
     while stack:
         node, idx = stack.pop()
-        if idx == len(node.children):
-            # base case : all childrens are visited
+        if idx == len(node):
+            # base case : all children are visited
             continue
         else:
-            child = node.children[idx]
+            child = node[idx]
             cmgr = node.cmgr.feed(node)
             if cmgr:
                 child.cmgr = cmgr
@@ -264,22 +247,18 @@ class Explorer(object):
         forest = []
         with open(fn, 'r') as f:
             start = False
-            body = ""
+            body = StringIO()
 
             for line in f:
                 if line.startswith(sig_begin()):
                     start = True
-                    body = ""
+                    body = StringIO()
                 elif start:
                     if line.startswith(sig_end()):
                         start = False
 
-                        # XXX: tooo large file cannot be handled
-                        if is_too_big(body):
-                            dbg.info("Ignore too large file : %s" % fn)
-                            continue
                         try:
-                            xml = ET.fromstring(body)
+                            xml = ET.fromstring(body.getvalue())
                         except Exception as e:
                             dbg.info("ERROR : %s when parsing %s" % (repr(e), fn))
                             return []
@@ -288,7 +267,8 @@ class Explorer(object):
                             tree = parse_exec_tree(root)
                             if parse_constraints:
                                 parse_constraint_mgr(root)
-                            forest.append(tree)
+                            yield tree
+                            del tree
+                            
                     else:
-                        body += line
-        return forest
+                        body.write(line)
