@@ -42,19 +42,6 @@ class ConstraintMgr(object):
             constraints = dict()
         self.constraints = constraints
 
-    def feed(self, node):
-        # return newly allocated ConstraintMgr if changed
-        # otherwise return null
-        event = node.event
-        if event.kind == EventKind.Assume:
-            cond = event.cond
-            if cond and cond.kind == SymbolKind.Constraint:
-                # XXX : latest gives false positives
-                if not cond.symbol in self.constraints:
-                    new = ConstraintMgr(self.constraints.copy())
-                    new.constraints[cond.symbol] = cond.constraints
-                    return new
-
     def __repr__(self):
         return "CM(%s)" % repr(self.constraints)
 
@@ -66,6 +53,9 @@ class ConstraintMgr(object):
             else:
                 return cstr
         return None
+
+    def copy(self):
+        return ConstraintMgr(self.constraints.copy())
 
 def is_eop(node):
     return isinstance(node.event, EOPEvent)
@@ -109,23 +99,44 @@ def is_unlock(node):
         return False
 
 class ExecNode(object):
-    def __init__(self, node, parent=None):
+    def __init__(self, node, parent=None, cmgr=None):
         assert node.tag == "NODE"
         self.node = node
-        self._parent = weakref.ref(parent) if parent is not None else parent
+        self.parent = parent
         self.event = self._parse_event(self.node.find("EVENT"))
+        self._update_cmgr(cmgr)
+
+    def init_constraint_mgr(self):
+        self._cmgr = ConstraintMgr()
 
     @property
-    def parent(self):
-        if self._parent is not None:
-            return self._parent()
+    def cmgr(self):
+        return self._cmgr
+
+    def _update_cmgr(self, cmgr):
+        if cmgr is not None:
+            # set a newly allocated ConstraintMgr if changed
+            # otherwise use as is
+            event = self.event
+            if event.kind == EventKind.Assume:
+                cond = event.cond
+                if cond and cond.kind == SymbolKind.Constraint:
+                    # XXX : latest gives false positives
+                    if not cond.symbol in cmgr.constraints:
+                        self._cmgr = cmgr.copy()
+                        self._cmgr.constraints[cond.symbol] = cond.constraints
+                        return
+        self._cmgr = cmgr
+
+    def _get_child(self, xml):
+        return ExecNode(xml, parent=self, cmgr=self.cmgr)
 
     def __iter__(self):
         for x in self.node.findall("NODE"):
-            yield ExecNode(x, parent=self)
+            yield self._get_child(x)
 
     def __getitem__(self, key):
-        return ExecNode(self.node.findall("NODE")[key], parent=self)
+        return self._get_child(self.node.findall("NODE")[key])
 
     def __len__(self):
         return len(self.node.findall("NODE"))
@@ -158,26 +169,7 @@ def parse_exec_tree(xml):
     return ExecTree(ExecNode(xml))
 
 def parse_constraint_mgr(root):
-    stack = []
-    stack.append((root, 0))
-    root.cmgr = ConstraintMgr()
-
-    while stack:
-        node, idx = stack.pop()
-        if idx == len(node):
-            # base case : all children are visited
-            continue
-        else:
-            child = node[idx]
-            cmgr = node.cmgr.feed(node)
-            if cmgr:
-                child.cmgr = cmgr
-            else:
-                child.cmgr = node.cmgr
-
-            stack.append((node, idx + 1))
-            stack.append((child, 0))
-    
+    root.init_constraint_mgr()
 
 def cached(filename_gen):
     def gen(func):
@@ -266,7 +258,7 @@ class Explorer(object):
                         for root in xml:
                             tree = parse_exec_tree(root)
                             if parse_constraints:
-                                parse_constraint_mgr(root)
+                                parse_constraint_mgr(tree.root)
                             yield tree
                             del tree
                             

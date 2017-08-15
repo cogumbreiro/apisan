@@ -40,6 +40,8 @@ class RetValChecker(Checker):
         for i, node in enumerate(path):
             if is_call(node):
                 call = node.event.call
+                if call is None:
+                    continue
                 code = node.event.code
                 constraint = cmgr.get(call)
                 # want to use as dictionary key
