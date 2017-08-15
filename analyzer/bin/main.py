@@ -3,6 +3,7 @@ import argparse
 import os
 from apisan.check import CHECKERS
 from apisan.parse.explorer import Explorer
+from apisan.lib import dbg
 
 TOP = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../")
 SCAN_BUILD = os.path.join(TOP, "./llvm/tools/clang/tools/scan-build/scan-build")
@@ -118,6 +119,7 @@ def handle_check(args):
 
 def main():
     args = parse_args()
+    dbg.quiet("debug") # do not print debugging information
     globals()["handle_%s" % args.cmd](args)
 
 if __name__ == "__main__":

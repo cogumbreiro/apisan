@@ -42,8 +42,7 @@ class Event(object):
             sym = parser.parse(string)
             return sym
         except Exception as e:
-            #dbg.debug('Exception when parsing : %s' % e)
-            return
+            dbg.debug('Exception when parsing %r: %s', string, e)
 
 
     def __setattr__(self, name, value):

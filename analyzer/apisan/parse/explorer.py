@@ -216,7 +216,7 @@ class Explorer(object):
         parse_constraints = getattr(self.checker, "parse_constraints", True)
         for tree in self._parse_file(fn, parse_constraints):
             result.append(self.checker.process(tree))
-        dbg.debug("Explored: %s" % fn)
+        dbg.info("Explored: %s" % fn)
         return result
 
     def explore_parallel(self, in_d):
