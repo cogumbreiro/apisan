@@ -50,6 +50,7 @@ class Event(object):
         raise TypeError("Event objects are immutable.")
 
 def _call_name(txt):
+    if txt is None: return None
     result = txt.split('(', 1)
     if len(result) < 2:
         return None
