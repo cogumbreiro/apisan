@@ -31,3 +31,4 @@ llvm/include/llvm/Support/DataTypes.h
 
 # tmp directory
 tmp
+*.pyc
