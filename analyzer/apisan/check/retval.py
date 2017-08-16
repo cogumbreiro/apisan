@@ -2,7 +2,7 @@
 import copy
 from .checker import Checker, Context, BugReport
 from ..lib import rank_utils, config
-from ..parse.explorer import is_call
+from ..parse.explorer import is_return
 from ..parse.symbol import IDSymbol
 
 class RetValContext(Context):
@@ -38,7 +38,7 @@ class RetValChecker(Checker):
         # get latest manager
         cmgr = path[-1].cmgr
         for i, node in enumerate(path):
-            if is_call(node):
+            if is_return(node):
                 call = node.event.call
                 if call is None:
                     continue

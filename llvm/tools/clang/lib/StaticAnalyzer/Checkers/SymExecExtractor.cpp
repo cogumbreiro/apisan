@@ -35,6 +35,7 @@ class SymExecEvent {
 public:
   enum Kind {
     FN_CALL,
+    FN_RETURN,
     ASSUME,
     EOP
   };
@@ -57,6 +58,7 @@ private:
 };
 
 class SymExecExtractor : public Checker< eval::Assume,
+                                         check::PreStmt<CallExpr>,
                                          check::PostStmt<CallExpr>,
                                          check::EndFunction,
                                          check::EndAnalysis > {
@@ -65,6 +67,7 @@ public:
   ProgramStateRef evalAssume(ProgramStateRef State,
                                  SVal Cond,
                                  bool Assumption) const;
+  void checkPreStmt(const CallExpr *CE, CheckerContext &C) const;
   void checkPostStmt(const CallExpr *CE, CheckerContext &C) const;
   void checkEndFunction(CheckerContext &C) const;
   void checkEndAnalysis(ExplodedGraph &G, BugReporter &BR, ExprEngine &N) const;
@@ -169,7 +172,8 @@ SymExecEvent::SymExecEvent(Kind k, const Stmt* s, CheckerContext &C)
     Code = getCodeAsString(C, s);
 
     switch (K) {
-      case FN_CALL: {
+      case FN_CALL: 
+      case FN_RETURN: {
         std::string Result;
         llvm::raw_string_ostream OS(Result);
         const CallExpr *CE = dyn_cast<CallExpr>(s);
@@ -205,6 +209,9 @@ std::string SymExecEvent::getKindAsXMLNode() const {
     case FN_CALL:
       OS << "@LOG_CALL";
       break;
+    case FN_RETURN:
+      OS << "@LOG_RETURN";
+      break;
     case ASSUME:
       OS << "@LOG_ASSUME";
       break;
@@ -235,6 +242,11 @@ std::string SymExecEvent::getAsString() const {
     case FN_CALL:
       OS << getCodeAsXMLNode();
       OS << "<CALL>" << encodeToXML(SV) << "</CALL>";
+      break;
+
+    case FN_RETURN:
+      OS << getCodeAsXMLNode();
+      OS << "<RETURN>" << encodeToXML(SV) << "</RETURN>";
       break;
 
     case ASSUME:
@@ -278,14 +290,56 @@ ProgramStateRef SymExecExtractor::evalAssume(ProgramStateRef State,
   return State;
 }
 
-void SymExecExtractor::checkPostStmt(const CallExpr *CE,
-                                     CheckerContext &C) const {
-  if (isInBlackList(C, C.getCalleeDecl(CE)))
+void SymExecExtractor::checkPreStmt(const CallExpr *CE,
+                                    CheckerContext &C) const {
+  const FunctionDecl *FD = C.getCalleeDecl(CE);
+  if (!FD) return;
+
+  if (isInBlackList(C, FD))
     return;
 
   ProgramStateRef State = C.getState();
   ProgramStateRef NewState = State->add<EventList>(SymExecEvent(SymExecEvent::FN_CALL, CE, C));
   C.addTransition(NewState);
+}
+
+void SymExecExtractor::checkPostStmt(const CallExpr *CE,
+                                     CheckerContext &C) const {
+  const FunctionDecl *FD = C.getCalleeDecl(CE);
+  if (!FD) return;
+
+  if (isInBlackList(C, FD))
+    return;
+
+  bool sink = false;
+  if (const IdentifierInfo *II = FD->getIdentifier()) {
+    sink = llvm::StringSwitch<bool>(StringRef(II->getName()))
+            .Case("exit", true)
+            .Case("panic", true)
+            .Case("error", true)
+            .Case("Assert", true)
+            .Case("ziperr", true)
+            .Case("assfail", true)
+            .Case("db_error", true)
+            .Case("__assert", true)
+            .Case("_wassert", true)
+            .Case("__assert_rtn", true)
+            .Case("__assert_fail", true)
+            .Case("dtrace_assfail", true)
+            .Case("yy_fatal_error", true)
+            .Case("_XCAssertionFailureHandler", true)
+            .Case("_DTAssertionFailureHandler", true)
+            .Case("_TSAssertionFailureHandler", true)
+            .Default(false);
+  }
+
+  if (sink) {
+    C.generateSink();
+  } else {
+    ProgramStateRef State = C.getState();
+    ProgramStateRef NewState = State->add<EventList>(SymExecEvent(SymExecEvent::FN_RETURN, CE, C));
+    C.addTransition(NewState);
+  }
 }
 
 void SymExecExtractor::checkEndFunction(CheckerContext &C) const {

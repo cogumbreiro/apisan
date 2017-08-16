@@ -8,6 +8,7 @@ gid = 0
 
 class EventKind(Enum):
     Call = "@LOG_CALL"
+    Return = "@LOG_RETURN"
     Location = "@LOG_LOCATION"
     EOP = "@LOG_EOP"
     Assume = "@LOG_ASSUME"
@@ -65,6 +66,37 @@ class CallEvent(Event):
             if child.tag == "KIND":
                 assert child.text == self.kind.value
             elif child.tag == "CALL":
+                self.__dict__['call_text'] = child.text
+                self.__dict__['_call'] = LazyParse(self._parse_call, child.text)
+                self.__dict__['_call_name'] = LazyParse(_call_name, child.text)
+
+            elif child.tag == "CODE":
+                self.__dict__['code'] = child.text
+            else:
+                raise ValueError("Unknown tag for CallEvent")
+
+    @property
+    def call_name(self):
+        return self._call_name()
+
+    @property
+    def call(self):
+        return self._call()
+
+    def _parse_call(self, text):
+        sym = self._parse_symbol(text)
+        if isinstance(sym, CallSymbol):
+            return sym
+
+class ReturnEvent(Event):
+    def __init__(self, event):
+        super().__init__()
+        self.__dict__['kind'] = EventKind.Return
+
+        for child in event:
+            if child.tag == "KIND":
+                assert child.text == self.kind.value
+            elif child.tag == "RETURN":
                 self.__dict__['call_text'] = child.text
                 self.__dict__['_call'] = LazyParse(self._parse_call, child.text)
                 self.__dict__['_call_name'] = LazyParse(_call_name, child.text)

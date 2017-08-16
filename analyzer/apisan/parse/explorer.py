@@ -14,7 +14,7 @@ from collections import namedtuple
 
 from ..lib import dbg
 from ..lib import utils
-from .event import EventKind, EOPEvent, CallEvent, LocationEvent, AssumeEvent
+from .event import EventKind, EOPEvent, CallEvent, ReturnEvent, LocationEvent, AssumeEvent
 from .symbol import SymbolKind
 
 ROOT = os.path.dirname(__file__)
@@ -78,6 +78,11 @@ def match_call(node):
 def is_call(node):
     return (node.event is not None
             and isinstance(node.event, CallEvent)
+            and node.event.call_text is not None)
+
+def is_return(node):
+    return (node.event is not None
+            and isinstance(node.event, ReturnEvent)
             and node.event.call_text is not None)
 
 LOCK_RE = re.compile(r"pthread_mutex_lock.*")
@@ -147,6 +152,8 @@ class ExecNode(object):
 
         if kind.text == "@LOG_CALL":
             return CallEvent(node)
+        elif kind.text == "@LOG_RETURN":
+            return ReturnEvent(node)
         elif kind.text == "@LOG_LOCATION":
             return LocationEvent(node)
         elif kind.text == "@LOG_EOP":
