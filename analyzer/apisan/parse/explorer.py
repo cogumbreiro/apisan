@@ -104,10 +104,9 @@ def is_unlock(node):
         return False
 
 class ExecNode(object):
-    def __init__(self, node, parent=None, cmgr=None):
+    def __init__(self, node, cmgr=None):
         assert node.tag == "NODE"
         self.node = node
-        self.parent = parent
         self.event = self._parse_event(self.node.find("EVENT"))
         self._update_cmgr(cmgr)
 
@@ -134,7 +133,7 @@ class ExecNode(object):
         self._cmgr = cmgr
 
     def _get_child(self, xml):
-        return ExecNode(xml, parent=self, cmgr=self.cmgr)
+        return ExecNode(xml, cmgr=self.cmgr)
 
     def __iter__(self):
         for x in self.node.findall("NODE"):
