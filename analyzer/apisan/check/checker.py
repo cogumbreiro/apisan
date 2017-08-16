@@ -35,7 +35,8 @@ class BugReport():
             )
         else:
             return "BugReport(score=%.02f, code=%s, key=%s, ctx=%s, reference=%s)" % (
-                self.score, self.code, self.key, self.ctx, self.get_references(5)
+                self.score, self.code, self.key, self.ctx,
+                self.get_references(config.REFERENCE)
             )
 
 class Context():
