@@ -73,6 +73,7 @@ def add_build_command(subparsers):
 
 def add_compile_command(subparsers):
     parser = subparsers.add_parser("compile", help="make a symbolic context database")
+    parser.add_argument("--compiler", default="gcc", help="set the compiler (default: gcc)")
     parser.add_argument("cmds", nargs="+")
     
 def add_check_command(subparsers):
@@ -98,7 +99,7 @@ def handle_build(args):
 
 def handle_compile(args):
     cmds = get_command()
-    cmds += ["gcc", "-c"]
+    cmds += [args.compiler, "-c"]
     cmds += args.cmds
     os.spawnv(os.P_WAIT, cmds[0], cmds)
 
