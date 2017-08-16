@@ -1,14 +1,19 @@
 # Makefile for testcase
 
-SRC := main.c
-TARGET = main.o
+SRCS = $(wildcard *.c)
+OBJS = $(SRCS:.c=.o)
 
-$(TARGET): $(SRC)
+%o: %c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-all: $(TARGET)
+all: $(OBJS)
+
+test:
+	../../apisan build make
+	../../apisan check --checker=cond
 
 clean:
-	rm -rf $(TARGET)
+	rm -rf $(OBJS)
+	rm -rf as-out
 
-.PHONY: all clean
+.PHONY: all test clean

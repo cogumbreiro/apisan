@@ -8,7 +8,12 @@ OBJS = $(SRCS:.c=.o)
 
 all: $(OBJS)
 
+test:
+	../../apisan build make
+	../../apisan check --checker=fsb
+
 clean:
 	rm -rf $(OBJS)
+	rm -rf as-out
 
-.PHONY: all clean
+.PHONY: all test clean

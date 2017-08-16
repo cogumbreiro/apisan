@@ -1,0 +1,3 @@
+============================== POTENTIAL BUGS ==============================
+BugReport(score=0.86, code=main.c:73, key=(SSL_get_peer_certificate, ((1, 18446744073709551615),)), ctx=(SSL_get_verify_result, ((0, 0),)))
+BugReport(score=0.86, code=main.c:75, key=(SSL_get_verify_result, ((0, 0),)), ctx=(SSL_get_peer_certificate, ((1, 18446744073709551615),)))

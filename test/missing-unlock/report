@@ -1,0 +1,2 @@
+============================== POTENTIAL BUGS ==============================
+BugReport(score=1.33, code=main.c:20, key=(pthread_mutex_lock, None), ctx=pthread_mutex_unlock)

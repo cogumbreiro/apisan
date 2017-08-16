@@ -1,6 +1,7 @@
 /fs.img
-/bin/llvm/
+/bin
 /private/
+as-out
 
 *~
 *.as

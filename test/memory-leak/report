@@ -1,0 +1,8 @@
+../../apisan build make
+make[1]: Entering directory '/home/khheo/project/apisan/test/memory-leak'
+/home/khheo/project/apisan/llvm/tools/clang/tools/scan-build/ccc-analyzer    -c -o main.o main.c
+[XXXX] /home/khheo/project/apisan/test/memory-leak/as-out//apisan/test/memory-leak/main.c.as
+make[1]: Leaving directory '/home/khheo/project/apisan/test/memory-leak'
+../../apisan check --checker=cpair
+============================== POTENTIAL BUGS ==============================
+BugReport(score=1.33, code=main.c:38, key=(malloc, ((1, 18446744073709551615),)), ctx=free)

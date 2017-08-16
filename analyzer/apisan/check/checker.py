@@ -31,7 +31,7 @@ class BugReport():
     def __repr__(self):
         if self.references is None:
             return "BugReport(score=%.02f, code=%s, key=%s, ctx=%s)" % (
-                self.score, self.code, self.key, self.ctx, self.references.pop()
+                self.score, self.code, self.key, self.ctx
             )
         else:
             return "BugReport(score=%.02f, code=%s, key=%s, ctx=%s, reference=%s)" % (
