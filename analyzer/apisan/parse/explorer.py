@@ -139,12 +139,6 @@ class ExecNode(object):
         for x in self.node.findall("NODE"):
             yield self._get_child(x)
 
-    def __getitem__(self, key):
-        return self._get_child(self.node.findall("NODE")[key])
-
-    def __len__(self):
-        return len(self.node.findall("NODE"))
-
     def _parse_event(self, node):
         kind = node[0]
         assert kind.tag == "KIND"
