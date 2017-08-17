@@ -108,7 +108,7 @@ class ExecNode(object):
         assert node.tag == "NODE"
         self.node = node
         self.event = self._parse_event(self.node.find("EVENT"))
-        self._update_cmgr(cmgr)
+        self._cmgr = cmgr
 
     def init_constraint_mgr(self):
         self._cmgr = ConstraintMgr()
@@ -117,7 +117,9 @@ class ExecNode(object):
     def cmgr(self):
         return self._cmgr
 
-    def _update_cmgr(self, cmgr):
+    def _get_child(self, xml):
+        # Create the child constraint manager
+        cmgr = self.cmgr
         if cmgr is not None:
             # set a newly allocated ConstraintMgr if changed
             # otherwise use as is
@@ -127,13 +129,9 @@ class ExecNode(object):
                 if cond and cond.kind == SymbolKind.Constraint:
                     # XXX : latest gives false positives
                     if not cond.symbol in cmgr.constraints:
-                        self._cmgr = cmgr.copy()
-                        self._cmgr.constraints[cond.symbol] = cond.constraints
-                        return
-        self._cmgr = cmgr
-
-    def _get_child(self, xml):
-        return ExecNode(xml, cmgr=self.cmgr)
+                        cmgr = cmgr.copy()
+                        cmgr.constraints[cond.symbol] = cond.constraints
+        return ExecNode(xml, cmgr=cmgr)
 
     def __iter__(self):
         for x in self.node.findall("NODE"):
@@ -167,9 +165,6 @@ ExecTree = namedtuple('ExecTree', ('root',))
 
 def parse_exec_tree(xml):
     return ExecTree(ExecNode(xml))
-
-def parse_constraint_mgr(root):
-    root.init_constraint_mgr()
 
 def cached(filename_gen):
     def gen(func):
@@ -236,7 +231,6 @@ class Explorer(object):
         return []
 
     def _parse_file(self, fn, parse_constraints):
-        forest = []
         with open(fn, 'r') as f:
             start = False
             body = StringIO()
@@ -258,7 +252,7 @@ class Explorer(object):
                         for root in xml:
                             tree = parse_exec_tree(root)
                             if parse_constraints:
-                                parse_constraint_mgr(tree.root)
+                                tree.root.init_constraint_mgr()
                             yield tree
                             del tree
                             
