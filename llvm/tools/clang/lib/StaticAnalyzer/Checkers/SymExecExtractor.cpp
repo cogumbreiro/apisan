@@ -312,7 +312,10 @@ void SymExecExtractor::checkPostStmt(const CallExpr *CE,
     return;
 
   bool sink = false;
-  if (const IdentifierInfo *II = FD->getIdentifier()) {
+
+  if (FD->isNoReturn()) {
+    sink = true;
+  } else if (const IdentifierInfo *II = FD->getIdentifier()) {
     sink = llvm::StringSwitch<bool>(StringRef(II->getName()))
             .Case("exit", true)
             .Case("panic", true)
