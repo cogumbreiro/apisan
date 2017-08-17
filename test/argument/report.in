@@ -1,2 +1,0 @@
-============================== POTENTIAL BUGS ==============================
-BugReport(score=0.83, code=${PWD}/main.c:37, key=(memcpy, 0, 2), ctx=False)

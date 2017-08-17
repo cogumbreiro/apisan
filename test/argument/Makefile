@@ -7,7 +7,7 @@ TPL = python3 ../run.py
 
 all: test
 
-report: report.in
+report.out: report.in
 	$(TPL) $< > $@
 
 test: report.out
@@ -15,7 +15,7 @@ test: report.out
 	../../apisan check --checker=args --skip-cache | diff report.out -
 
 clean:
-	rm -rf $(OBJS)
+	rm -f $(OBJS) report.in
 	rm -rf as-out
 
 .PHONY: all test clean
