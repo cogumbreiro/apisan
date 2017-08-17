@@ -15,7 +15,7 @@ test: report.out
 	../../apisan check --checker=args --skip-cache | diff report.out -
 
 clean:
-	rm -f $(OBJS) report.in
+	rm -f $(OBJS) report.out
 	rm -rf as-out
 
 .PHONY: all test clean
