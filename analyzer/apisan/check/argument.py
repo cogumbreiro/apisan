@@ -48,6 +48,8 @@ class ArgChecker(Checker):
         for i, node in enumerate(path):
             if is_call(node):
                 call = node.event.call
+                if call is None:
+                    continue
                 code = node.event.code
                 for i, arg1 in enumerate(call.args):
                     for j in range(i + 1, len(call.args)):
