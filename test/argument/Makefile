@@ -3,14 +3,16 @@
 SRCS = $(wildcard *.c)
 OBJS = $(SRCS:.c=.o)
 
-%o: %c
-	$(CC) $(CFLAGS) -c -o $@ $<
+TPL = python3 ../run.py
 
-all: $(OBJS)
+all: test
 
-test:
-	../../apisan build make
-	../../apisan check --checker=args
+report: report.in
+	$(TPL) $< > $@
+
+test: report.out
+	../../apisan compile main.c
+	../../apisan check --checker=args --skip-cache | diff report.out -
 
 clean:
 	rm -rf $(OBJS)
