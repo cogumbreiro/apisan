@@ -4,6 +4,8 @@ import os
 from apisan.check import CHECKERS
 from apisan.parse.explorer import Explorer
 from apisan.lib import dbg
+from apisan.lib import config
+from collections import ChainMap
 
 TOP = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../")
 SCAN_BUILD = os.path.join(TOP, "./llvm/tools/clang/tools/scan-build/scan-build")
@@ -67,30 +69,39 @@ def get_command():
     ]
     return cmds
 
-def add_build_command(subparsers):
+def add_build_command(subparsers, conf):
     parser = subparsers.add_parser("build", help="make a symbolic context database")
     parser.add_argument("cmds", nargs="+")
 
-def add_compile_command(subparsers):
+def add_compile_command(subparsers, conf):
     parser = subparsers.add_parser("compile", help="make a symbolic context database")
     parser.add_argument("--compiler", default="gcc", help="set the compiler (default: gcc)")
     parser.add_argument("cmds", nargs="+")
     
-def add_check_command(subparsers):
+def add_check_command(subparsers, conf):
     parser = subparsers.add_parser("check", help="check a API misuse")
     parser.add_argument("--checker", choices=CHECKERS.keys(), required=True)
-    parser.add_argument("--db", default=None)
+    parser.add_argument("--db", default=os.path.join(os.getcwd(), "as-out"))
     parser.add_argument("--filename", default=None, help="Check a single file (.as); ignores the database.")
-    parser.add_argument("--skip-cache", action="store_true", default=False, help="Caches the results of the checker.")
+    if conf.skip_cache:
+        parser.add_argument("--cache", dest="skip_cache", action="store_false", default=True, help="Uses a cache for the results of the checker.")
+    else:
+        parser.add_argument("--skip-cache", action="store_true", default=False, help="Skips using any cached results of the checker.")
 
 def parse_args():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest="cmd")
     subparsers.required = True
-    add_build_command(subparsers)
-    add_compile_command(subparsers)
-    add_check_command(subparsers)
-    return parser.parse_args()
+    # Initialize the default configuration values
+    conf = config.defaults()
+    add_build_command(subparsers, conf)
+    add_compile_command(subparsers, conf)
+    add_check_command(subparsers, conf)
+    # Extend the configuration object with the command-line args:
+    # Conf objects expect dictionaries, so we conver a argparse.Namespace
+    # into a dict using vars:
+    conf.push(vars(parser.parse_args()))
+    return conf
 
 def handle_build(args):
     cmds = get_command()
@@ -113,14 +124,12 @@ def handle_check(args):
     if args.filename is not None:
         bugs = exp.explore_single_file(args.filename)
     else:
-        if args.db is None:
-            args.db = os.path.join(os.getcwd(), "as-out")
         bugs = exp.explore_parallel(args.db)
     print_bugs(bugs)
 
 def main():
     args = parse_args()
-    dbg.quiet("debug") # do not print debugging information
+    dbg.quiet(args.ignored_log_levels) # do not print debugging information
     globals()["handle_%s" % args.cmd](args)
 
 if __name__ == "__main__":
