@@ -81,31 +81,9 @@ class Checker(object):
 
     def process(self, tree):
         self._initialize_process()
-        self._do_dfs(tree)
+        for path in tree:
+            self._process_path(path)
         return self._finalize_process()
 
-    def _do_dfs(self, tree):
-        count = 0
-        iters = [iter(tree.root)]
-        nodes = [tree.root]
-
-        while nodes:
-            node = nodes[-1]
-            children = iters[-1]
-            if is_eop(node):
-                # delayed visiting for truncated paths
-                self._process_path(nodes)
-                count += 1
-                # clean up
-                nodes.pop()
-                iters.pop()
-            else:
-                try:
-                    child = next(children)
-                    nodes.append(child)
-                    iters.append(iter(child))
-                except StopIteration:
-                    nodes.pop()
-                    iters.pop()
 
 

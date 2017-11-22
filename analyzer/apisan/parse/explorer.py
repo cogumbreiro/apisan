@@ -161,11 +161,40 @@ class ExecNode(object):
             result += child.__str__(i + 1)
         return result
 
-ExecTree = namedtuple('ExecTree', ('root',))
+class ExecTree:
+    __slots__ = ['root']
+    
+    def __init__(self, root):
+        self.root = root
 
-def parse_exec_tree(xml):
-    return ExecTree(ExecNode(xml))
+    def __iter__(self):
+        """
+        Given a tree, yields every path going from root to a leaf.
+        DFS navigation.
+        """
+        count = 0
+        iters = [iter(self.root)]
+        nodes = [self.root]
 
+        while nodes:
+            node = nodes[-1]
+            children = iters[-1]
+            if is_eop(node):
+                # delayed visiting for truncated paths
+                yield nodes
+                count += 1
+                # clean up
+                nodes.pop()
+                iters.pop()
+            else:
+                try:
+                    child = next(children)
+                    nodes.append(child)
+                    iters.append(iter(child))
+                except StopIteration:
+                    nodes.pop()
+                    iters.pop()
+    
 def cached(filename_gen):
     def gen(func):
         @wraps(func)
@@ -193,6 +222,40 @@ def cached(filename_gen):
         return try_cached
     return gen
 
+def parse_file(fn, parse_constraints=False):
+    """
+    A file consists of a collection of tree-objects. Parsing it returns
+    an iterator over the collection of trees
+    """
+    with open(fn, 'r') as f:
+        start = False
+        body = StringIO()
+
+        for line in f:
+            if line.startswith(sig_begin()):
+                start = True
+                body = StringIO()
+            elif start:
+                if line.startswith(sig_end()):
+                    start = False
+
+                    try:
+                        xml = ET.fromstring(body.getvalue())
+                    except Exception as e:
+                        dbg.info("ERROR : %s when parsing %s" % (repr(e), fn))
+                        return []
+
+                    for root in xml:
+                        tree = ExecTree(ExecNode(root))
+                        if parse_constraints:
+                            tree.root.init_constraint_mgr()
+                        yield tree
+                        del tree
+                        
+                else:
+                    body.write(line)
+
+
 class Explorer(object):
     def __init__(self, checker):
         self.checker = checker
@@ -209,7 +272,7 @@ class Explorer(object):
     def _explore_file(self, fn):
         result = []
         parse_constraints = getattr(self.checker, "parse_constraints", True)
-        for tree in self._parse_file(fn, parse_constraints):
+        for tree in parse_file(fn, parse_constraints):
             result.append(self.checker.process(tree))
         dbg.info("Explored: %s" % fn)
         return result
@@ -230,31 +293,4 @@ class Explorer(object):
         self._explore_file(filename)
         return []
 
-    def _parse_file(self, fn, parse_constraints):
-        with open(fn, 'r') as f:
-            start = False
-            body = StringIO()
 
-            for line in f:
-                if line.startswith(sig_begin()):
-                    start = True
-                    body = StringIO()
-                elif start:
-                    if line.startswith(sig_end()):
-                        start = False
-
-                        try:
-                            xml = ET.fromstring(body.getvalue())
-                        except Exception as e:
-                            dbg.info("ERROR : %s when parsing %s" % (repr(e), fn))
-                            return []
-
-                        for root in xml:
-                            tree = parse_exec_tree(root)
-                            if parse_constraints:
-                                tree.root.init_constraint_mgr()
-                            yield tree
-                            del tree
-                            
-                    else:
-                        body.write(line)
