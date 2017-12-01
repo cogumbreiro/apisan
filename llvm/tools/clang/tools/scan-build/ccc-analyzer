@@ -262,21 +262,12 @@ sub Analyze {
 
   close TO_PARENT;
   my ($ofh, $ofile) = tempfile("clang_output_XXXXXX", DIR => $HtmlDir);
-  my $as_file = abs_path($file);
-  my @dentry = split(/\//, $as_file);
-  my $start = ($#dentry >= 3) ? $#dentry - 3 : 0;
-
-  $as_file  = "${HtmlDir}/";
-  for my $i ($start .. $#dentry)
-  {
-    if ($i == $#dentry) {
-      system "mkdir -p ${as_file}";
-    }
-    $as_file = "${as_file}/${dentry[$i]}";
-  }
+  my $as_file = "${HtmlDir}/" . ${file};
+  my $target_dir = dirname($as_file);
+  system "mkdir -p ${target_dir}";
 
   open(my $as_fh, '>', "${as_file}.as")  or die "Cannot open $as_file\n";
-  print "[XXXX] ${as_file}.as\n";
+  print "[APISAN] Generating: ${as_file}.as\n";
 
   my $is_path = 0;
   while (<FROM_CHILD>) {
