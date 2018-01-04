@@ -3,9 +3,9 @@ import os
 import sys
 from ply import yacc
 from ply.lex import TOKEN
-from .slexer import SLexer
-from ..lib import dbg
-from .symbol import (
+from apisan.parse.slexer import SLexer
+from apisan.lib import dbg
+from apisan.parse.symbol import (
     BinaryOperatorSymbol, ConstraintSymbol, FieldSymbol, ArraySymbol,
     CallSymbol, IDSymbol, ConcreteIntSymbol, StringLiteralSymbol
 )
@@ -165,5 +165,5 @@ if __name__ == '__main__':
                 "malloc(256)@={ [0, 0], [2, 18446744073709551615] }"]
 
     for test in tests:
-        print(parse_symbol(test))
+        print(parser.parse(test))
 
