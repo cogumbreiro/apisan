@@ -251,7 +251,7 @@ def parse_file(fn, parse_constraints=False):
     A file consists of a collection of tree-objects. Parsing it returns
     an iterator over the collection of trees
     """
-    with smart_open(fn, 'r') as f:
+    with smart_open(fn, 'rt') as f:
         start = False
         body = StringIO()
 
