@@ -6,6 +6,10 @@ import xml.etree.ElementTree as ET
 import re
 import pickle
 import weakref
+import bz2
+import lzma
+import gzip
+import os.path
 
 from io import StringIO
 from enum import Enum
@@ -222,12 +226,32 @@ def cached(filename_gen):
         return try_cached
     return gen
 
+LOADERS = [
+    (".xz", lzma.open),
+    (".lzma", lzma.open),
+    (".bz2", bz2.open),
+    (".gz", gzip.open),
+    (".gzip", gzip.open),
+]
+
+def smart_open(filename, *args, **kwargs):
+    """
+    Automatically discover compressed filenames given some filename.
+    Prefer compressed versions over uncompressed files.
+    """
+    for ext, opener in LOADERS:
+        try:
+            return opener(filename + ext, *args, **kwargs)
+        except FileNotFoundError:
+            pass
+    return open(filename, *args, **kwargs)
+
 def parse_file(fn, parse_constraints=False):
     """
     A file consists of a collection of tree-objects. Parsing it returns
     an iterator over the collection of trees
     """
-    with open(fn, 'r') as f:
+    with smart_open(fn, 'r') as f:
         start = False
         body = StringIO()
 
