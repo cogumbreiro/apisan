@@ -8,8 +8,8 @@ from ..parse.explorer import is_call
 from ..parse.symbol import IDSymbol
 
 class CondChecker(Checker):
-    def _initialize_process(self):
-        self.context = Context()
+    def _initialize_process(self, config):
+        self.context = Context(config)
 
     def _process_path(self, path):
         # get latest manager

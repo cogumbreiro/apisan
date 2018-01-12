@@ -3,7 +3,7 @@ from ..parse.explorer import is_eop
 from ..lib import config
 from ..lib.store import Store
 
-class BugReport():
+class BugReport:
     def __init__(self, score, code, key, ctx, references=None):
         self.key = key
         self.ctx = ctx
@@ -36,13 +36,14 @@ class BugReport():
         else:
             return "BugReport(score=%.02f, code=%s, key=%s, ctx=%s, reference=%s)" % (
                 self.score, self.code, self.key, self.ctx,
-                self.get_references(config.REFERENCE)
+                self.get_references(self.ctx.config.reference)
             )
 
-class Context():
-    def __init__(self):
+class Context:
+    def __init__(self, config):
         self.total_uses = Store(level=1)
         self.ctx_uses = Store(level=2)
+        self.config = config
 
     def add(self, key, value, code):
         if value is not None:
@@ -60,7 +61,7 @@ class Context():
             total = self.total_uses[key]
             for ctx, codes in value.items():
                 score = len(codes) / len(total)
-                if score >= config.THRESHOLD and score != 1:
+                if score >= self.config.treshold and score != 1:
                     diff = total - codes
                     for bug in diff:
                         br = BugReport(score, bug, key, ctx)
@@ -68,7 +69,10 @@ class Context():
                         bugs.append(br)
         return bugs
 
-class Checker(object):
+class Checker:
+    def __init__(self, config):
+        self.config = config
+        
     def _initialize_process(self):
         # optional
         pass

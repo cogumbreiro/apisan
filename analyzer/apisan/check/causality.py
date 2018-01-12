@@ -7,8 +7,8 @@ from ..parse.explorer import is_call
 from ..parse.symbol import IDSymbol
 
 class CausalityContext(Context):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, config):
+        super().__init__(config)
         self.entries = {}
 
     def add_or_intersect(self, key, values, code):
@@ -27,7 +27,7 @@ class CausalityContext(Context):
 
 class CausalityChecker(Checker):
     def _initialize_process(self):
-        self.context = CausalityContext()
+        self.context = CausalityContext(self.config)
 
     def _process_path(self, path):
         # get latest manager

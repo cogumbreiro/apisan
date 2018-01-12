@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from .checker import Checker, Context, BugReport
-from ..lib import rank_utils, config
+from ..lib import rank_utils
 from ..parse.explorer import is_call
 from ..parse.symbol import IDSymbol, StringLiteralSymbol
 
@@ -30,7 +30,7 @@ class FSBContext(Context):
                 if ctx[0]:
                     continue
                 score = correct / len(total)
-                if score >= config.THRESHOLD and score != 1:
+                if score >= self.config.treshold and score != 1:
                     for bug in codes:
                         br = BugReport(score, bug, key, ctx)
                         added.add(bug)
@@ -39,7 +39,7 @@ class FSBContext(Context):
 
 class FSBChecker(Checker):
     def _initialize_process(self):
-        self.context = FSBContext()
+        self.context = FSBContext(self.config)
 
     def _process_path(self, path):
         for i, node in enumerate(path):

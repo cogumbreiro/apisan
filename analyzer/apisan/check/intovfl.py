@@ -103,7 +103,7 @@ class IntOvflChecker(Checker):
                             self.context.add((call.name, j), ret, code)
 
     def _initialize_process(self):
-        self.context = IntOvflContext()
+        self.context = IntOvflContext(self.config)
 
     def _finalize_process(self):
         return self.context

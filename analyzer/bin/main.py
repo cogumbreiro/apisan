@@ -115,7 +115,7 @@ def handle_compile(args):
     os.spawnv(os.P_WAIT, cmds[0], cmds)
 
 def handle_check(args):
-    chk = CHECKERS[args.checker]()
+    chk = CHECKERS[args.checker](args)
     chk.name = args.checker
     exp = Explorer(chk)
     if args.skip_cache:

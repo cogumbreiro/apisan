@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import copy
 from .checker import Checker, Context, BugReport
-from ..lib import rank_utils, config
+from ..lib import rank_utils
 from ..parse.explorer import is_call, is_lock, is_unlock, match_call, CallType
 from ..parse.symbol import IDSymbol
 
@@ -14,7 +14,7 @@ class ThreadSafetyContext(Context):
             scores = {}
             for ctx, codes in value.items():
                 score = len(codes) / len(total)
-                if score >= config.THRESHOLD and ctx and score != 1:
+                if score >= self.config.treshold and ctx is not None and score != 1:
                     diff = diff - codes
                     for bug in diff:
                         scores[bug] = score
@@ -34,7 +34,7 @@ class ThreadSafetyChecker(Checker):
     parse_constraints = False
 
     def _initialize_process(self):
-        self.context = ThreadSafetyContext()
+        self.context = ThreadSafetyContext(self.config)
 
     def _process_path(self, path):
         mutex = False

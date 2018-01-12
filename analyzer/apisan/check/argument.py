@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from .checker import Checker, Context, BugReport
 from ..parse.explorer import is_call
-from ..lib import config
 from ..parse.symbol import CallSymbol, IDSymbol
 
 def extract_nodes(arg):
@@ -33,7 +32,7 @@ class ArgContext(Context):
             related = len(value[True])
             score = related / len(total)
             codes = value[False]
-            if score >= config.THRESHOLD and score != 1:
+            if score >= self.config.treshold and score != 1:
                 for bug in codes:
                     br = BugReport(score, bug, key, False)
                     added.add(bug)
@@ -42,7 +41,7 @@ class ArgContext(Context):
 
 class ArgChecker(Checker):
     def _initialize_process(self):
-        self.context = ArgContext()
+        self.context = ArgContext(self.config)
 
     def _process_path(self, path):
         for i, node in enumerate(path):

@@ -38,7 +38,10 @@ class Options:
         self.data = data
     
     def __getattr__(self, key):
-        return self.data[key]
+        if not key.startswith("_"):
+            return self.data[key]
+        else:
+            raise AttributeError(key)
     
     def push(self, data):
         self.data = ChainMap(data, self.data)

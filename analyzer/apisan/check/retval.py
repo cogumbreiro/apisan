@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import copy
 from .checker import Checker, Context, BugReport
-from ..lib import rank_utils, config
+from ..lib import rank_utils
 from ..parse.explorer import is_return
 from ..parse.symbol import IDSymbol
 
@@ -14,7 +14,7 @@ class RetValContext(Context):
             scores = {}
             for ctx, codes in value.items():
                 score = len(codes) / len(total)
-                if score >= config.THRESHOLD and score != 1:
+                if score >= self.config.treshold and score != 1:
                     diff = diff - codes
                     for bug in diff:
                         scores[bug] = score
@@ -32,7 +32,7 @@ class RetValContext(Context):
 
 class RetValChecker(Checker):
     def _initialize_process(self):
-        self.context = RetValContext()
+        self.context = RetValContext(self.config)
 
     def _process_path(self, path):
         # get latest manager
