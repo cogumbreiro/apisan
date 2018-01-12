@@ -3,8 +3,13 @@ import os
 import sys
 import pdb
 import glob
+import bz2
+import lzma
+import gzip
+import os.path
 
 from operator import itemgetter
+from collections import OrderedDict
 
 # when break, call pdb
 def install_pdb():
@@ -48,11 +53,33 @@ def read_file(pn):
         data = fd.read()
     return data
 
+LOADERS = OrderedDict([
+    (".xz", lzma.open),
+    (".lzma", lzma.open),
+    (".bz2", bz2.open),
+    (".gz", gzip.open),
+    (".gzip", gzip.open),
+])
+
+def get_supported_extensions(ext=".as"):
+    """
+    Returns the supported extensions.
+    """
+    result = list(ext + x for x in LOADERS.keys())
+    result.append(ext)
+    return result
+
+def smart_open(filename, *args, **kwargs):
+    """
+    Uses the file name's extension to transparently decompress files.
+    """
+    return LOADERS.get(os.path.splitext(filename)[1], open)(filename, *args, **kwargs)
+
 def get_files(out_d):
     for root, dirs, files in os.walk(out_d):
         for name in files:
             pn = os.path.join(root, name)
-            if pn.endswith(".as"):
+            if any(map(pn.endswith, get_supported_extensions())):
                 yield pn
 
 def get_all_files(in_d):
