@@ -3,6 +3,7 @@ from enum import Enum
 from .symbol import CallSymbol
 from .sparser import SParser
 from ..lib import dbg
+import ply.lex
 
 gid = 0
 
@@ -42,7 +43,11 @@ class Event(object):
         try:
             sym = parser.parse(string)
             return sym
+        except ply.lex.LexError as e:
+            dbg.debug('Could not parse %r: %s', string, e)
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             dbg.debug('Exception when parsing %r: %s', string, e)
 
 
