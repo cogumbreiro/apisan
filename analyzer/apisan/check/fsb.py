@@ -30,7 +30,7 @@ class FSBContext(Context):
                 if ctx[0]:
                     continue
                 score = correct / len(total)
-                if score >= self.config.treshold and score != 1:
+                if score >= self.config.threshold and score != 1:
                     for bug in codes:
                         br = BugReport(score, bug, key, ctx)
                         added.add(bug)

@@ -32,7 +32,7 @@ class ArgContext(Context):
             related = len(value[True])
             score = related / len(total)
             codes = value[False]
-            if score >= self.config.treshold and score != 1:
+            if score >= self.config.threshold and score != 1:
                 for bug in codes:
                     br = BugReport(score, bug, key, False)
                     added.add(bug)

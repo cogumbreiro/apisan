@@ -61,7 +61,7 @@ class Context:
             total = self.total_uses[key]
             for ctx, codes in value.items():
                 score = len(codes) / len(total)
-                if score >= self.config.treshold and score != 1:
+                if score >= self.config.threshold and score != 1:
                     diff = total - codes
                     for bug in diff:
                         br = BugReport(score, bug, key, ctx)

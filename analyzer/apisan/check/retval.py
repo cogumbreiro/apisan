@@ -14,7 +14,7 @@ class RetValContext(Context):
             scores = {}
             for ctx, codes in value.items():
                 score = len(codes) / len(total)
-                if score >= self.config.treshold and score != 1:
+                if score >= self.config.threshold and score != 1:
                     diff = diff - codes
                     for bug in diff:
                         scores[bug] = score
