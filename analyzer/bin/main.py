@@ -80,7 +80,7 @@ def add_compile_command(subparsers, conf):
     
 def add_check_command(subparsers, conf):
     parser = subparsers.add_parser("check", help="check a API misuse")
-    parser.add_argument("--checker", choices=CHECKERS.keys(), required=True)
+    parser.add_argument("checker", choices=CHECKERS.keys())
     parser.add_argument("--db", default=os.path.join(os.getcwd(), "as-out"))
     parser.add_argument("--filename", default=None, help="Check a single file (.as); ignores the database.")
     if conf.skip_cache:
