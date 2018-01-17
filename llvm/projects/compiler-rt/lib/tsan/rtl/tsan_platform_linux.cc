@@ -29,7 +29,6 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
 #include <sys/mman.h>
@@ -46,6 +45,7 @@
 #if SANITIZER_LINUX
 #define __need_res_state
 #include <resolv.h>
+#include "bits/types/stack_t.h"
 #endif
 
 #ifdef sa_handler
