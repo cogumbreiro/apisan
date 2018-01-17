@@ -76,10 +76,8 @@ void SourceLocation::printWithoutColumn(raw_ostream &OS, const SourceManager &SM
     return;
   }
 
-  llvm::SmallString<128> Path(PLoc.getFilename());
-  llvm::sys::fs::make_absolute(Path);
   // The macro expansion and spelling pos is identical for file locs.
-  OS << Path.str() << ':' << PLoc.getLine();
+  OS << PLoc.getFilename() << ':' << PLoc.getLine();
   return;
 }
 
