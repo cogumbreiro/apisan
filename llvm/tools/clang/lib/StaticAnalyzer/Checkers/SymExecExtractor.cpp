@@ -377,7 +377,6 @@ void SymExecExtractor::checkEndAnalysis(ExplodedGraph &G,
 
   BugReport *R = new BugReport(*SymExecExtractorReportType, OS.str(),
                                 PathDiagnosticLocation(D, SM));
-  llvm::errs() << "###: " << OS.str() << "\n";
   BR.emitReport(R);
 }
 
