@@ -292,7 +292,10 @@ sub Analyze {
   waitpid($pid,0);
   close(FROM_CHILD);
   my $Result = $?;
-
+  if ($Result == 0) {
+    print "[APISAN] Compressing: ${as_file}.as.bz2\n";
+    system("bzip2 -f ${as_file}.as");
+  }
   # Did the command die because of a signal?
   if ($ReportFailures) {
     if ($Result & 127 and $Cmd eq $Clang and defined $HtmlDir) {
