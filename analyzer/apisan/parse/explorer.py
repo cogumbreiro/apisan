@@ -104,8 +104,9 @@ def is_unlock(node):
         return False
 
 class ExecNode(object):
-    def __init__(self, node, cmgr=None):
+    def __init__(self, node, resolver, cmgr=None):
         assert node.tag == "NODE"
+        self.resolver = resolver
         self.node = node
         self.event = self._parse_event(self.node.find("EVENT"))
         self._cmgr = cmgr
@@ -131,7 +132,7 @@ class ExecNode(object):
                     if not cond.symbol in cmgr.constraints:
                         cmgr = cmgr.copy()
                         cmgr.constraints[cond.symbol] = cond.constraints
-        return ExecNode(xml, cmgr=cmgr)
+        return ExecNode(xml, resolver=self.resolver, cmgr=cmgr)
 
     def __iter__(self):
         for x in self.node.findall("NODE"):
@@ -142,11 +143,11 @@ class ExecNode(object):
         assert kind.tag == "KIND"
 
         if kind.text == "@LOG_CALL":
-            return CallEvent(node)
+            return CallEvent(node, self.resolver)
         elif kind.text == "@LOG_RETURN":
-            return ReturnEvent(node)
+            return ReturnEvent(node, self.resolver)
         elif kind.text == "@LOG_LOCATION":
-            return LocationEvent(node)
+            return LocationEvent(node, self.resolver)
         elif kind.text == "@LOG_EOP":
             return EOPEvent(node)
         elif kind.text == "@LOG_ASSUME":
@@ -222,11 +223,31 @@ def cached(filename_gen):
         return try_cached
     return gen
 
-def parse_file(fn, parse_constraints=False):
+def no_resolver(x): return x
+
+class FilenameResolver:
+    def __init__(self, prefix=os.path.join(os.getcwd(), "as-out")):
+        self.prefix = prefix
+    
+    def __call__(self, filename):
+        if filename.startswith(self.prefix):
+            return BasedirResolver(os.path.dirname(filename)[len(self.prefix) + 1:])
+        else:
+            return no_resolver
+
+class BasedirResolver:
+    def __init__(self, basedir):
+        self.basedir = basedir
+    
+    def __call__(self, filename):
+        return filename if os.path.isabs(filename) else os.path.join(self.basedir, filename)
+
+def parse_file(fn, parse_constraints=False, resolver=FilenameResolver()):
     """
     A file consists of a collection of tree-objects. Parsing it returns
     an iterator over the collection of trees
     """
+    resolver = resolver(fn)
     with utils.smart_open(fn, 'rt') as f:
         start = False
         body = StringIO()
@@ -246,7 +267,7 @@ def parse_file(fn, parse_constraints=False):
                         return []
 
                     for root in xml:
-                        tree = ExecTree(ExecNode(root))
+                        tree = ExecTree(ExecNode(root, resolver=resolver))
                         if parse_constraints:
                             tree.root.init_constraint_mgr()
                         yield tree

@@ -63,7 +63,7 @@ def _call_name(txt):
 
 
 class CallEvent(Event):
-    def __init__(self, event):
+    def __init__(self, event, resolver):
         super().__init__()
         self.__dict__['kind'] = EventKind.Call
 
@@ -76,7 +76,7 @@ class CallEvent(Event):
                 self.__dict__['_call_name'] = LazyParse(_call_name, child.text)
 
             elif child.tag == "CODE":
-                self.__dict__['code'] = child.text
+                self.__dict__['code'] = resolver(child.text)
             else:
                 raise ValueError("Unknown tag for CallEvent")
 
@@ -94,7 +94,7 @@ class CallEvent(Event):
             return sym
 
 class ReturnEvent(Event):
-    def __init__(self, event):
+    def __init__(self, event, resolver):
         super().__init__()
         self.__dict__['kind'] = EventKind.Return
 
@@ -107,7 +107,7 @@ class ReturnEvent(Event):
                 self.__dict__['_call_name'] = LazyParse(_call_name, child.text)
 
             elif child.tag == "CODE":
-                self.__dict__['code'] = child.text
+                self.__dict__['code'] = resolver(child.text)
             else:
                 raise ValueError("Unknown tag for CallEvent")
 
@@ -125,7 +125,7 @@ class ReturnEvent(Event):
             return sym
 
 class LocationEvent(Event):
-    def __init__(self, event):
+    def __init__(self, event, resolver):
         super().__init__()
         self.__dict__['kind'] = EventKind.Location
 
@@ -138,7 +138,7 @@ class LocationEvent(Event):
             elif child.tag == "TYPE":
                 self.__dict__['type'] = child.text
             elif child.tag == "CODE":
-                self.__dict__['code'] = child.text
+                self.__dict__['code'] = resolver(child.text)
             else:
                 raise ValueError("Unknown tag for LocationEvent")
 
