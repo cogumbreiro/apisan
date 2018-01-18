@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from ..parse.explorer import is_eop
 from ..lib import config
 from ..lib.store import Store
 
