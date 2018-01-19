@@ -231,16 +231,25 @@ class FilenameResolver:
     
     def __call__(self, filename):
         if filename.startswith(self.prefix):
-            return BasedirResolver(os.path.dirname(filename)[len(self.prefix) + 1:])
+            filename = filename[len(self.prefix) + 1:] # remove the common prefix
+            # Guess the original filename
+            fname, ext = os.path.splitext(filename)
+            while ext != ".as" and ext != "":
+                fname, ext = os.path.splitext(fname)
+            if ext == ".as":
+                return ContainedResolver(fname)
+            else:
+                # Couldn't find it, just return the original filename
+                return ContainedResolver(filename)
         else:
             return no_resolver
 
-class BasedirResolver:
-    def __init__(self, basedir):
-        self.basedir = basedir
+class ContainedResolver:
+    def __init__(self, container, sep=":"):
+        self.container = container + sep
     
     def __call__(self, filename):
-        return filename if os.path.isabs(filename) else os.path.join(self.basedir, filename)
+        return self.container + filename
 
 def parse_file(fn, parse_constraints=False, resolver=FilenameResolver()):
     """
