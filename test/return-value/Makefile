@@ -10,7 +10,7 @@ all: $(OBJS)
 
 test:
 	../../apisan build make
-	../../apisan check --checker=rvchk
+	../../apisan check rvchk
 
 clean:
 	rm -rf $(OBJS)
