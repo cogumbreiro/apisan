@@ -71,12 +71,12 @@ def get_command():
 
 def add_build_command(subparsers, conf):
     parser = subparsers.add_parser("build", help="make a symbolic context database")
-    parser.add_argument("cmds", nargs="+")
+    parser.add_argument("cmds", nargs=argparse.REMAINDER)
 
 def add_compile_command(subparsers, conf):
     parser = subparsers.add_parser("compile", help="make a symbolic context database")
     parser.add_argument("--compiler", default="gcc", help="set the compiler (default: gcc)")
-    parser.add_argument("cmds", nargs="+")
+    parser.add_argument("cmds", nargs=argparse.REMAINDER)
     
 def add_check_command(subparsers, conf):
     parser = subparsers.add_parser("check", help="check a API misuse")
