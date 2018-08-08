@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 import argparse
 import os
+import subprocess
+import sys
+
 from apisan.check import CHECKERS
 from apisan.parse.explorer import Explorer
 from apisan.lib import dbg
@@ -106,13 +109,13 @@ def parse_args():
 def handle_build(args):
     cmds = get_command()
     cmds += args.cmds
-    os.spawnv(os.P_WAIT, cmds[0], cmds)
+    sys.exit(subprocess.call(cmds))
 
 def handle_compile(args):
     cmds = get_command()
     cmds += [args.compiler, "-c"]
     cmds += args.cmds
-    os.spawnv(os.P_WAIT, cmds[0], cmds)
+    sys.exit(subprocess.call(cmds))
 
 def handle_check(args):
     chk = CHECKERS[args.checker](args)
